@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import projectsRouter from './routes/projects';
 import jobsRouter from './routes/jobs';
+import drawingSetsRouter from './routes/drawingSets';
 import { startJobWorker } from './workers/jobWorker';
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 // ── Routes ────────────────────────────────────
 app.use('/api/projects', projectsRouter);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/drawing-sets', drawingSetsRouter);
 
 // ── Health check ──────────────────────────────
 app.get('/api/health', (_req, res) => {

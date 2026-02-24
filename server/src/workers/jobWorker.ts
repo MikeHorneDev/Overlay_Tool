@@ -1,32 +1,23 @@
 import prisma from '../lib/prisma';
+import { processPdf } from '../services/pdf.service';
 
 let isProcessing = false;
 
-async function simulateProcessing(jobId: string): Promise<void> {
-  const steps = 10;
-  const stepDuration = 500; // 5 seconds total
-
-  for (let i = 1; i <= steps; i++) {
-    await new Promise<void>((resolve) => setTimeout(resolve, stepDuration));
-
-    const progress = Math.round((i / steps) * 100);
-    const message =
-      i < steps
-        ? `Processing... ${progress}%`
-        : 'Processing complete';
-
+async function processPdfJob(jobId: string, drawingSetId: string): Promise<void> {
+  const result = await processPdf(drawingSetId, async (current, total, message) => {
+    const progress = total > 0 ? Math.round((current / total) * 100) : 0;
     await prisma.job.update({
       where: { id: jobId },
       data: { progress, message },
     });
-  }
+  });
 
   await prisma.job.update({
     where: { id: jobId },
     data: {
       status: 'complete',
       progress: 100,
-      message: 'PDF processed successfully',
+      message: `Processed ${result.pagesProcessed} pages — ${result.pagesWithSheetNumbers} sheet numbers found`,
     },
   });
 }
@@ -46,12 +37,21 @@ async function processNextJob(): Promise<void> {
   try {
     await prisma.job.update({
       where: { id: job.id },
-      data: { status: 'processing', message: 'Starting processing...' },
+      data: { status: 'processing', message: 'Starting PDF processing…' },
     });
 
-    await simulateProcessing(job.id);
+    if (job.type === 'pdf_process') {
+      await processPdfJob(job.id, job.referenceId);
+    } else {
+      // Unknown job type — mark complete so the queue doesn't stall
+      console.warn(`[JobWorker] Unknown job type: ${job.type}`);
+      await prisma.job.update({
+        where: { id: job.id },
+        data: { status: 'failed', error: `Unsupported job type: ${job.type}` },
+      });
+    }
   } catch (err) {
-    console.error(`[JobWorker] Error processing job ${job.id}:`, err);
+    console.error(`[JobWorker] Job ${job.id} failed:`, err);
     await prisma.job.update({
       where: { id: job.id },
       data: {

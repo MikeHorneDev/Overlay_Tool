@@ -26,6 +26,16 @@ export interface ProjectDetail extends Project {
   drawingSets: DrawingSet[];
 }
 
+export interface Page {
+  id: string;
+  pageIndex: number;
+  sheetNumber: string | null;
+  sheetNumberSource: string | null;
+  imagePath: string;
+  width: number | null;
+  height: number | null;
+}
+
 export interface Job {
   id: string;
   type: string;
@@ -85,6 +95,13 @@ export async function uploadDrawingSet(
       },
     }
   );
+  return res.data;
+}
+
+// ── Drawing Sets ─────────────────────────────
+
+export async function getDrawingSetPages(drawingSetId: string): Promise<Page[]> {
+  const res = await api.get<Page[]>(`/drawing-sets/${drawingSetId}/pages`);
   return res.data;
 }
 

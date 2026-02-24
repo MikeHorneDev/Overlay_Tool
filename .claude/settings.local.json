@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/mikeh/Desktop/overlay-tool/server && npx prisma generate 2>&1)",
+      "Bash(cd /c/Users/mikeh/Desktop/overlay-tool/server && npx prisma db push 2>&1)",
+      "Bash(cd /c/Users/mikeh/Desktop/overlay-tool/server && npx tsc --noEmit 2>&1)",
+      "Bash(cd /c/Users/mikeh/Desktop/overlay-tool/client && npx tsc --noEmit 2>&1)",
+      "Bash(cd:*)",
+      "Bash(cd /c/Users/mikeh/Desktop/overlay-tool && git push 2>&1)",
+      "Bash(echo ImageMagick: NOT FOUND:*)",
+      "Bash(head:*)",
+      "Bash(echo EXIT:$?:*)"
+    ]
+  }
+}
