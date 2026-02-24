@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Project {
+  id                String       @id @default(uuid())
+  name              String
+  externalProjectId String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  drawingSets       DrawingSet[]
+  comparisons       Comparison[]
+}
+
+model DrawingSet {
+  id           String     @id @default(uuid())
+  projectId    String
+  label        String
+  originalFile String
+  createdAt    DateTime   @default(now())
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pages        Page[]
+  comparisonsA Comparison[] @relation("SetA")
+  comparisonsB Comparison[] @relation("SetB")
+}
+
+model Page {
+  id                String      @id @default(uuid())
+  drawingSetId      String
+  pageIndex         Int
+  sheetNumber       String?
+  sheetNumberSource String?
+  imagePath         String
+  width             Int?
+  height            Int?
+  drawingSet        DrawingSet  @relation(fields: [drawingSetId], references: [id], onDelete: Cascade)
+  matchedPairsA     MatchedPair[] @relation("PageA")
+  matchedPairsB     MatchedPair[] @relation("PageB")
+}
+
+model Comparison {
+  id             String        @id @default(uuid())
+  projectId      String
+  setAId         String
+  setBId         String
+  status         String        @default("pending")
+  createdAt      DateTime      @default(now())
+  completedAt    DateTime?
+  titleBlockMask String?
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  setA           DrawingSet    @relation("SetA", fields: [setAId], references: [id])
+  setB           DrawingSet    @relation("SetB", fields: [setBId], references: [id])
+  matchedPairs   MatchedPair[]
+}
+
+model MatchedPair {
+  id            String     @id @default(uuid())
+  comparisonId  String
+  pageAId       String
+  pageBId       String
+  sheetNumber   String
+  diffImagePath String?
+  changeScore   Float?
+  sizeWarning   Boolean    @default(false)
+  status        String
+  comparison    Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  pageA         Page       @relation("PageA", fields: [pageAId], references: [id])
+  pageB         Page       @relation("PageB", fields: [pageBId], references: [id])
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  type        String
+  referenceId String
+  status      String   @default("pending")
+  progress    Int      @default(0)
+  message     String?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
